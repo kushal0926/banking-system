@@ -1,0 +1,36 @@
+{
+  "name": "banktransaction",
+  "version": "1.0.0",
+  "description": "how the bank transaction works",
+  "license": "ISC",
+  "author": "moks",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "cross-env PORT=8080 nodemon --exec tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "http-status": "^2.1.0",
+    "mongodb": "^7.1.0",
+    "mongoose": "^9.2.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3",
+    "cross-env": "^10.1.0",
+    "eslint": "^10.0.2",
+    "globals": "^17.4.0",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  }
+}
