@@ -1,20 +1,24 @@
-// index.js
-import { PORT } from "./config/env.js";
-import { createServer } from "./server.js";
+import { createServer } from "./server";
+import { env } from "./config/env.config";
+import connectToDatabase from "./config/database";
 
-const port = PORT || "8080";
+const PORT = parseInt(env.PORT);
 
-const server = createServer().listen(port, () => {
-  console.log(`🐼 Server ready at: http://localhost:${port}`);
+const server = createServer().listen(PORT, async () => {
+  await connectToDatabase();
+  console.log(`🌐 -> server ready at: http://localhost:${PORT}`);
 });
 
+// ensures proper exit code
 const exitHandler = () => {
   if (server) {
+    // force exit after 5s
+    const timeout = setTimeout(() => process.exit(1), 5000);
     server.close(() => {
-      console.log("Server closed");
+      clearTimeout(timeout);
+      console.log("server closed");
       process.exit(1);
     });
-    
   } else {
     process.exit(1);
   }
@@ -25,12 +29,22 @@ const unexpectedErrorHandler = (error: Error) => {
   exitHandler();
 };
 
+// global error handling
 process.on("uncaughtException", unexpectedErrorHandler);
 process.on("unhandledRejection", unexpectedErrorHandler);
 
+// graceful shutdown -> prevents requests from being cutoff abruptly
 process.on("SIGTERM", () => {
   console.info("SIGTERM received");
   if (server) {
-    server.close();
+    server.close(() => {
+      process.exit(0);
+    });
   }
+});
+
+// cleaner shutdown in local dev / terminal use
+process.on("SIGINT", () => {
+  console.info("SIGINT received");
+  exitHandler();
 });

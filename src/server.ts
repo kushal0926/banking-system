@@ -1,19 +1,9 @@
-// server.js
-import express, { Express, Response, Request } from "express";
-import cors from "cors"
-import { createHealthRouter } from "./routes/health.js";
-import connectToDatabase from "./config/database.js";
+import express from "express";
+import type { Express, Response, Request, NextFunction } from "express";
+import cors from "cors";
+import { createHealthRouter } from "./routes/health.routes";
 
-const errorHandler = (error: Error, req: Request, res: Response) => {
-  console.log(error);
-
-  res.status(500).json({
-    status: false,
-    message: error.message || "Internal Server Error",
-  });
-};
-
-// the server singleton
+// the server singleton, avoiding duplicate app instances
 let server: Express | null = null;
 
 export const createServer = (): Express => {
@@ -24,16 +14,34 @@ export const createServer = (): Express => {
   // middleware setup
   server.use(express.json());
   server.use(express.urlencoded({ extended: true }));
-  server.use(cors())
+  // connecting frontend apps
+  server.use(
+    cors({
+      origin: "http://localhost:5173", // frontend localhost
+      credentials: true,
+    }),
+  );
 
-  server.use("/api", createHealthRouter());
-  connectToDatabase()
+  // routes
+  server.get("/", (_req: Request, res: Response) => {
+    res.send("server is running");
+  });
+  // checking health routes
+  server.use("/v1", createHealthRouter());
 
-  server.use((req, res, next) => {
-    next(new Error("Not found"));
+  // route error handling
+  server.use((_req: Request, res: Response) => {
+    res.status(404).json({ message: "route not found" });
   });
 
-  server.use(errorHandler);
+  // error handling
+  server.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    console.error(error);
+    res.status(500).json({
+      message: "internal Server Error",
+      ...(process.env["NODE_ENV"] === "development" && { error: error }),
+    });
+  });
 
   return server;
 };
